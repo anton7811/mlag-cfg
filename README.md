@@ -1,0 +1,1 @@
+This repository contains configuration snippets for various MLAG usage scenarios for SONiC Lite.
