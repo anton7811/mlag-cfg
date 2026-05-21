@@ -28,8 +28,8 @@ Two MLAG pairs form a diamond between host **A** (dual-homed to the upper pair) 
 
 **Configuration**
 
-- **Upper pair (switches 11 & 12):** MCLAG domain id `1`, peer keepalive on **Vlan4094** (`10.10.10.0/30`).
-- **Lower pair (switches 13 & 14):** MCLAG domain id `2`, peer keepalive on **Vlan4094** (`10.10.20.0/30`).
+- **Upper pair (switches 1 & 2):** MCLAG domain id `1`, peer keepalive on **Vlan4094** (`10.10.10.0/30`).
+- **Lower pair (switches 3 & 4):** MCLAG domain id `2`, peer keepalive on **Vlan4094** (`10.10.20.0/30`).
 - **Customer VLAN:** **Vlan10** is carried tagged on the peer **PortChannel1** and untagged on access **PortChannel2** and **PortChannel3** (toward hosts and inter-tier links).
 
 ### Port roles (same layout on every switch)
@@ -44,14 +44,14 @@ Two MLAG pairs form a diamond between host **A** (dual-homed to the upper pair) 
 
 | Link | Left | Right |
 |------|------|-------|
-| Peer link (upper) | 11: Eth28, Eth32 | 12: Eth28, Eth32 (two cables; LACP) |
-| Peer link (lower) | 13: Eth28, Eth32 | 14: Eth28, Eth32 |
-| Upper cross | 11: PortChannel2 (Eth4) | 13: PortChannel2 (Eth4) |
-| Upper cross | 12: PortChannel2 (Eth4) | 14: PortChannel2 (Eth4) |
-| Host A | 11: PortChannel3 (Eth0) | A (LACP bond or two legs to one host) |
-| Host A | 12: PortChannel3 (Eth0) | A |
-| Host B | 13: PortChannel3 (Eth0) | B |
-| Host B | 14: PortChannel3 (Eth0) | B |
+| Peer link (upper) | 1: Eth28, Eth32 | 2: Eth28, Eth32 (two cables; LACP) |
+| Peer link (lower) | 3: Eth28, Eth32 | 4: Eth28, Eth32 |
+| Upper cross | 1: PortChannel2 (Eth4) | 3: PortChannel2 (Eth4) |
+| Upper cross | 2: PortChannel2 (Eth4) | 4: PortChannel2 (Eth4) |
+| Host A | 1: PortChannel3 (Eth0) | A (LACP bond or two legs to one host) |
+| Host A | 2: PortChannel3 (Eth0) | A |
+| Host B | 3: PortChannel3 (Eth0) | B |
+| Host B | 4: PortChannel3 (Eth0) | B |
 
 ## Reproducing the setup
 
@@ -61,23 +61,42 @@ Two MLAG pairs form a diamond between host **A** (dual-homed to the upper pair) 
 4. **Copy** the matching overlay onto each topology node (**1**–**4**).
 5. **Load the overlay** (merges into `CONFIG_DB`):
 
+   **SONiC way:**
    ```bash
    sudo config load /path/to/config_db_1_mlag.json -y
    ```
-
    Repeat with `config_db_2_mlag.json` … `config_db_4_mlag.json` on switches **2**–**4** respectively.
 
-6. **Persist and apply** (exact commands depend on image; typical pattern):
+   **SONiC Lite way:**
+   ```bash
+   sonic-cli
+   ```
+   Insert all commands from `cli_clear_ip.txt` - to remove default IP configuration on target interfaces.
+   Insert all commands from `cli_1_mlag.txt` - configure MCLAG
+   Repeat with `cli_2_mlag.json` … `cli_4_mlag.json` on switches **2**–**4** respectively.
 
+7. **Persist and apply** (exact commands depend on image; typical pattern):
+
+   **SONiC way**
    ```bash
    sudo config save -y
    ```
+   **SONiC Lite way:**
+   ```bash
+   sonic-cli
+   sonic# write memory
+   ```
 
-7. **Verify MLAG** on each pair:
+6. **Verify MLAG** on each pair:
 
+   **SONiC way**
    ```bash
    show mclag brief
    show interfaces portchannel
+   ```
+   **SONiC Lite way**
+   ```
+   show interface PortChannel
    ```
 
 8. **Hosts:** Place **A** and **B** in the same L2 subnet on **VLAN 10** (e.g. `192.168.10.0/24`). Use an **802.3ad** bond on each host across the two links to PortChannel3 on the pair, or bring up both links in the same VLAN with a single bridge—your OS network stack choice.

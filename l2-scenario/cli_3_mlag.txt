@@ -1,0 +1,65 @@
+! Switch 3 — MLAG overlay (config_db_3_mlag.json)
+
+! Enable iccpd
+configure terminal
+feature enable iccpd
+
+! VLAN 10 (customer), 4094 (ICCP keep-alive)
+interface Vlan 10
+exit
+interface Vlan 4094
+exit
+
+! PortChannel1 peer link; PortChannel2/3 access LAGs
+interface PortChannel 1 fast_rate
+switchport trunk allowed Vlan 10,4094
+exit
+interface PortChannel 2 fast_rate
+switchport access Vlan 10
+exit
+interface PortChannel 3 fast_rate
+switchport access Vlan 10
+exit
+
+! PortChannel1: Ethernet28, Ethernet32 (peer link)
+interface Ethernet28
+no switchport access Vlan
+channel-group 1
+exit
+interface Ethernet32
+no switchport access Vlan
+channel-group 1
+exit
+
+! PortChannel2: Ethernet4
+interface Ethernet4
+no switchport access Vlan
+channel-group 2
+exit
+
+! PortChannel3: Ethernet0
+interface Ethernet0
+no switchport access Vlan
+channel-group 3
+exit
+
+! MCLAG domain 2 (peer switch 14: 10.10.20.2)
+mclag domain 2
+source-ip 10.10.20.1
+peer-ip 10.10.20.2
+peer-link PortChannel 1
+exit
+
+! MCLAG members (not peer-link)
+interface PortChannel 2
+mclag 2
+exit
+interface PortChannel 3
+mclag 2
+exit
+
+! ICCP keep-alive on Vlan4094
+interface Vlan 4094
+mclag-separate-ip
+ip address 10.10.20.1/30
+exit

@@ -1,0 +1,21 @@
+! Switch 1..4 — clear default IP addresses
+
+configure terminal
+
+interface Ethernet0
+no ip address 10.0.0.0
+exit
+
+interface Ethernet4
+no ip address 10.0.0.2
+exit
+
+interface Ethernet28
+no ip address 10.0.0.14
+exit
+
+interface Ethernet32
+no ip address 10.0.0.16
+exit
+
+exit
